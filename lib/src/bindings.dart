@@ -41,7 +41,7 @@ typedef NewMeasurement = Pointer<Void> Function(Pointer<Void>, MeasurementParams
 typedef _GetDataFFI = Int Function(Pointer<Void>, Pointer<Pointer<MacroMicroNative>>, Pointer<Size>);
 typedef GetData = int Function(Pointer<Void>, Pointer<Pointer<MacroMicroNative>>, Pointer<Size>);
 
-final DynamicLibrary dylib = DynamicLibrary.open(r'C:\Users\chmoo\Documents\Research\TimeDomainTTUltra\x64\Release\TimeDomain_Swabian.dll');
+final DynamicLibrary dylib = DynamicLibrary.open(r'C:\Users\Christopher\source\repos\chmoore889\TimeDomainTTUltra\x64\Release\TimeDomain_Swabian.dll');
 
 final GetTagger getTagger = dylib.lookupFunction<_GetTaggerFFI, GetTagger>('getTagger');
 
