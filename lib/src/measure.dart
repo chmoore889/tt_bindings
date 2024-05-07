@@ -32,7 +32,7 @@ Future<void> isolateFunction(SendPort sendPort) async {
   malloc.free(nativeParamsDetArray);
   malloc.free(nativeParams);
 
-  bindings.startMeasurement(nativeMeasurement);
+  //bindings.startMeasurement(nativeMeasurement);
 
   final Map<int, int> tpsf = {};
   while(!shouldClose) {
@@ -49,7 +49,9 @@ Future<void> isolateFunction(SendPort sendPort) async {
 
     for (int x = 0; x < length; x++) {
       const int binSizePs = 50;
-      tpsf.update(macroMicro[x].microTime ~/ binSizePs, (value) => value + 1, ifAbsent: () => 1);
+      int bin = macroMicro[x].microTime ~/ binSizePs * binSizePs;
+      bin = bin % params.laserPeriod;
+      tpsf.update(bin, (value) => value + 1, ifAbsent: () => 1);
     }
     sendPort.send(tpsf);
     malloc.free(macroMicro);
