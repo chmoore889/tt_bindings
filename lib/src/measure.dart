@@ -84,10 +84,23 @@ Stream<Map<int, int>> startMeasurement(MeasurementParams params) async* {
       });
     },
     onCancel: () async {
+      //Setup mechanism to see isolate close
+      final Completer<void> completer = Completer();
+      final ReceivePort responsePort = ReceivePort();
+      isolate.addOnExitListener(responsePort.sendPort);
+      final responseSub = responsePort.listen((message) {
+        completer.complete();
+      });
+
+      //Ask isolate to close
       sendPort.send(null);
       receivePort.close();
-      await Future.delayed(const Duration(seconds: 5));
-      isolate.kill();
+
+      await completer.future.timeout(const Duration(seconds: 5), onTimeout: () {
+        isolate.kill();
+      });
+
+      responseSub.cancel();
     },
   );
 
