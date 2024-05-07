@@ -5,4 +5,4 @@ library;
 
 //export 'src/bindings.dart';
 export 'src/measure.dart';
-export 'src/measurementParams.dart';
+export 'src/measurement_params.dart';
