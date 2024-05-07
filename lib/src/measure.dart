@@ -7,7 +7,7 @@ import 'package:tt_bindings/src/bindings.dart' as bindings;
 import 'package:tt_bindings/src/measurement_params.dart';
 
 Stream<Map<int, int>> startMeasurement(MeasurementParams params) async* {
-  Future<void> isolateFunction(ReceivePort receivePort) async {
+  Future<void> isolateFunction(SendPort sendPort) async {
     final ReceivePort receivePort = ReceivePort();
 
     Completer<MeasurementParams> completer = Completer();
