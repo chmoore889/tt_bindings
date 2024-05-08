@@ -30,9 +30,11 @@ Future<void> isolateFunction(SendPort sendPort) async {
   sendPort.send(receivePort.sendPort);
 
   final Pointer<Void> nativeDevice = bindings.getTagger();
+  print('Got tagger, waiting for params');
 
   final Pointer<bindings.MeasurementParamsNative> nativeParams = malloc();
   final (MeasurementParams, PostProcessingParams) params = await completer.future;
+  print('Got params');
   final MeasurementParams measurementParams = params.$1;
   final Pointer<Int> nativeParamsDetArray = malloc(measurementParams.detectorChannels.length);
 
@@ -40,6 +42,7 @@ Future<void> isolateFunction(SendPort sendPort) async {
   final Pointer<Void> nativeMeasurement = bindings.newMeasurement(nativeDevice, nativeParams.ref, measurementParams.saveDirectory?.path.toNativeUtf8() ?? nullptr);
   malloc.free(nativeParamsDetArray);
   malloc.free(nativeParams);
+  print('Starting new measurement');
 
   //bindings.startMeasurement(nativeMeasurement);
 
@@ -55,7 +58,7 @@ Future<void> isolateFunction(SendPort sendPort) async {
   int correlationIndex = 0;
 
   postProcessingParams = params.$2;
-  int lastMacroStartTime = 0;
+  int? lastMacroStartTime;
   final Map<int, int> tpsf = {};
   while(!shouldClose) {
     final Pointer<Pointer<bindings.MacroMicroNative>> macroMicroPointer = malloc();
@@ -70,12 +73,17 @@ Future<void> isolateFunction(SendPort sendPort) async {
     malloc.free(lengthPointer);
 
     for (int x = 0; x < length; x++) {
+      lastMacroStartTime ??= macroMicro[x].macroTime;
+
       //Correlator Calculations
       if(postProcessingParams.gatingRange.inRange(macroMicro[x])) {
         //If end of bin, add to correlator
         final int currentCorrelationIndex = (macroMicro[x].macroTime - lastMacroStartTime) ~/ correlationBinSizePs;
         if(currentCorrelationIndex != correlationIndex) {
           correlator.addPoint(correlationBin);
+          for(int x = correlationIndex + 1; x < currentCorrelationIndex; x++) {
+            correlator.addPoint(0);
+          }
           correlationIndex = currentCorrelationIndex;
           correlationBin = 0;
         }
@@ -92,6 +100,10 @@ Future<void> isolateFunction(SendPort sendPort) async {
       if(lastMacroStartTime + postProcessingParams.integrationTimePs < macroMicro[x].macroTime) {
         lastMacroStartTime = macroMicro[x].macroTime;
         
+        final int maxCorrelationIndex = postProcessingParams.integrationTimePs ~/ correlationBinSizePs;
+        for(int x = correlationIndex + 1; x < maxCorrelationIndex; x++) {
+          correlator.addPoint(0);
+        }
         sendPort.send((tpsf, correlator.genOutput()));
         tpsf.clear();
       }

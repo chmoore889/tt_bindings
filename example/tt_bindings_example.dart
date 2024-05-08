@@ -1,4 +1,3 @@
-import 'package:tt_bindings/src/correlator.dart';
 import 'package:tt_bindings/tt_bindings.dart';
 
 Future<void> main() async {
