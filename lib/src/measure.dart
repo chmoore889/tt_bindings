@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ffi';
 import 'dart:isolate';
+import 'dart:math';
 import 'package:ffi/ffi.dart';
 
 import 'package:tt_bindings/src/bindings.dart' as bindings;
@@ -79,13 +80,18 @@ Future<void> isolateFunction(SendPort sendPort) async {
       if(postProcessingParams.gatingRange.inRange(macroMicro[x])) {
         //If end of bin, add to correlator
         final int currentCorrelationIndex = (macroMicro[x].macroTime - lastMacroStartTime) ~/ correlationBinSizePs;
-        if(currentCorrelationIndex != correlationIndex) {
+        if(currentCorrelationIndex > correlationIndex) {
           correlator.addPoint(correlationBin);
-          for(int x = correlationIndex + 1; x < currentCorrelationIndex; x++) {
+
+          final int maxCorrelationIndex = postProcessingParams.integrationTimePs ~/ correlationBinSizePs;
+          for(int x = correlationIndex + 1; x < min(currentCorrelationIndex, maxCorrelationIndex); x++) {
             correlator.addPoint(0);
           }
-          correlationIndex = currentCorrelationIndex;
+          correlationIndex = currentCorrelationIndex % maxCorrelationIndex;
           correlationBin = 0;
+        }
+        else if(currentCorrelationIndex < correlationIndex) {
+          throw StateError('Correlation index went backwards');
         }
 
         correlationBin++;
@@ -97,14 +103,15 @@ Future<void> isolateFunction(SendPort sendPort) async {
       bin = bin % measurementParams.laserPeriod;
 
       //Integration Time Handler
-      if(lastMacroStartTime + postProcessingParams.integrationTimePs < macroMicro[x].macroTime) {
-        lastMacroStartTime = macroMicro[x].macroTime;
+      final int futureLastMacroStartTime = lastMacroStartTime + postProcessingParams.integrationTimePs;
+      if(futureLastMacroStartTime < macroMicro[x].macroTime) {
+        lastMacroStartTime = futureLastMacroStartTime;
         
-        final int maxCorrelationIndex = postProcessingParams.integrationTimePs ~/ correlationBinSizePs;
-        for(int x = correlationIndex + 1; x < maxCorrelationIndex; x++) {
+        sendPort.send((tpsf, correlator.genOutput()));
+        for(int x = 0; x < correlationIndex; x++) {
           correlator.addPoint(0);
         }
-        sendPort.send((tpsf, correlator.genOutput()));
+
         tpsf.clear();
       }
 

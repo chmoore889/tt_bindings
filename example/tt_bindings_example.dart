@@ -10,16 +10,17 @@ Future<void> main() async {
       detectorTriggerVoltage: 0.9,
     ),
     PostProcessingParams(
-      integrationTimeSeconds: 2,
+      integrationTimeSeconds: 1,
       gatingRange: const GatingRange(0, 12500),
     ),
   );
 
   final streamMeasureSub = streamMeasure.listen((event) {
-    print(event);
+    //print(event);
+    print('Got event');
   });
 
-  await Future.delayed(const Duration(seconds: 15));
+  await Future.delayed(const Duration(seconds: 100));
 
   await streamMeasureSub.cancel();
 

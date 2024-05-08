@@ -106,7 +106,6 @@ class Correlator {
   }
 
   Iterable<CorrelationPair> genOutput() {
-    print(numAccumulated);
     //Put data into dataOut
     final List<double> dataOut = [
       ..._initialDelays.correlations,
