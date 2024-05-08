@@ -1,4 +1,5 @@
 import 'dart:ffi';
+import 'dart:io';
 
 import 'package:tt_bindings/src/bindings.dart';
 
@@ -10,12 +11,15 @@ class MeasurementParams {
   final List<int> detectorChannels;
   final double detectorTriggerVoltage;
 
+  final Directory? saveDirectory;
+
   const MeasurementParams({
     required this.laserChannel,
     required this.laserPeriod,
     required this.laserTriggerVoltage,
     required this.detectorChannels,
     required this.detectorTriggerVoltage,
+    this.saveDirectory,
   });
 
   void copyToNative(MeasurementParamsNative native, Pointer<Int> nativeParamsDetArray) {

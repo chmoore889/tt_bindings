@@ -9,6 +9,10 @@ Future<void> main() async {
       detectorChannels: [2],
       detectorTriggerVoltage: 0.9,
     ),
+    PostProcessingParams(
+      integrationTimeSeconds: 2,
+      gatingRange: const GatingRange(0, 12500),
+    ),
   );
 
   final streamMeasureSub = streamMeasure.listen((event) {

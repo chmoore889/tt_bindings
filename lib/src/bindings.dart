@@ -1,5 +1,7 @@
 import 'dart:ffi';
 
+import 'package:ffi/ffi.dart';
+
 final class MeasurementParamsNative extends Struct {
   @Int()
   external int laserChannel;
@@ -34,8 +36,8 @@ typedef _PointerControlFFI = Void Function(Pointer<Void>);
 typedef PointerControl = void Function(Pointer<Void>);
 
 //newMeasurement
-typedef _NewMeasurementFFI = Pointer<Void> Function(Pointer<Void>, MeasurementParamsNative);
-typedef NewMeasurement = Pointer<Void> Function(Pointer<Void>, MeasurementParamsNative);
+typedef _NewMeasurementFFI = Pointer<Void> Function(Pointer<Void>, MeasurementParamsNative, Pointer<Utf8>);
+typedef NewMeasurement = Pointer<Void> Function(Pointer<Void>, MeasurementParamsNative, Pointer<Utf8>);
 
 //getData
 typedef _GetDataFFI = Int Function(Pointer<Void>, Pointer<Pointer<MacroMicroNative>>, Pointer<Size>);
