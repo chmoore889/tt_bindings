@@ -4,6 +4,7 @@ import 'dart:isolate';
 import 'package:ffi/ffi.dart';
 
 import 'package:tt_bindings/src/bindings.dart' as bindings;
+import 'package:tt_bindings/src/correlator.dart';
 import 'package:tt_bindings/src/measurement_params.dart';
 import 'package:tt_bindings/src/post_processing_params.dart';
 
@@ -42,6 +43,17 @@ Future<void> isolateFunction(SendPort sendPort) async {
 
   //bindings.startMeasurement(nativeMeasurement);
 
+  const int correlationBinSizeNs = 1000;
+  const int correlationBinSizePs = correlationBinSizeNs * 1000;
+  final Correlator correlator = Correlator(
+    initialDelayNum: 16,
+    numDelaysPerCombineStage: 8,
+    binSizeNs: correlationBinSizeNs,
+    maxTauNs: 1000000,
+  );
+  int correlationBin = 0;
+  int correlationIndex = 0;
+
   postProcessingParams = params.$2;
   int lastMacroStartTime = 0;
   final Map<int, int> tpsf = {};
@@ -58,13 +70,29 @@ Future<void> isolateFunction(SendPort sendPort) async {
     malloc.free(lengthPointer);
 
     for (int x = 0; x < length; x++) {
+      //Correlator Calculations
+      if(postProcessingParams.gatingRange.inRange(macroMicro[x])) {
+        //If end of bin, add to correlator
+        final int currentCorrelationIndex = (macroMicro[x].macroTime - lastMacroStartTime) ~/ correlationBinSizePs;
+        if(currentCorrelationIndex != correlationIndex) {
+          correlator.addPoint(correlationBin);
+          correlationIndex = currentCorrelationIndex;
+          correlationBin = 0;
+        }
+
+        correlationBin++;
+      }
+
+      //TPSF Calculations
       const int binSizePs = 50;
       int bin = macroMicro[x].microTime ~/ binSizePs * binSizePs;
       bin = bin % measurementParams.laserPeriod;
 
+      //Integration Time Handler
       if(lastMacroStartTime + postProcessingParams.integrationTimePs < macroMicro[x].macroTime) {
         lastMacroStartTime = macroMicro[x].macroTime;
-        sendPort.send(tpsf);
+        
+        sendPort.send((tpsf, correlator.genOutput()));
         tpsf.clear();
       }
 
@@ -84,7 +112,7 @@ void updateProcessingParams(PostProcessingParams processingParams) {
   _sendPort?.send(processingParams);
 }
 
-Stream<Map<int, int>> startMeasurement(MeasurementParams measurementParams, PostProcessingParams processingParams) async* {
+Stream<(Map<int, int>, Iterable<CorrelationPair>)> startMeasurement(MeasurementParams measurementParams, PostProcessingParams processingParams) async* {
   if(_isolate != null) {
     throw StateError('Measurement already running');
   }
@@ -93,16 +121,16 @@ Stream<Map<int, int>> startMeasurement(MeasurementParams measurementParams, Post
   //Can't send sendport
   _isolate = await Isolate.spawn(isolateFunction, receivePort.sendPort);
 
-  late final StreamController<Map<int, int>> tpsfs;
-  tpsfs = StreamController<Map<int, int>>(
+  late final StreamController<(Map<int, int>, Iterable<CorrelationPair>)> output;
+  output = StreamController<(Map<int, int>, Iterable<CorrelationPair>)>(
     onListen: () {
       receivePort.listen((message) {
         if (message is SendPort) {
           _sendPort = message;
           _sendPort!.send((measurementParams, processingParams));
         }
-        else if (message is Map<int, int>) {
-          tpsfs.add(message);
+        else if (message is (Map<int, int>, Iterable<CorrelationPair>)) {
+          output.add(message);
         }
       });
     },
@@ -128,5 +156,5 @@ Stream<Map<int, int>> startMeasurement(MeasurementParams measurementParams, Post
     },
   );
 
-  yield* tpsfs.stream;
+  yield* output.stream;
 }
