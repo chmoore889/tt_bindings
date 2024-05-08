@@ -1,5 +1,3 @@
-import 'package:tt_bindings/src/bindings.dart';
-
 class PostProcessingParams {
   int integrationTimePs;
   GatingRange gatingRange;
@@ -15,5 +13,5 @@ class GatingRange {
 
   const GatingRange(this.startPs, this.endPs) : assert(startPs < endPs && startPs >= 0);
 
-  bool inRange(MacroMicroNative timestamp) => timestamp.microTime >= startPs && timestamp.microTime <= endPs;
+  bool inRange(int microTime) => microTime >= startPs && microTime <= endPs;
 }

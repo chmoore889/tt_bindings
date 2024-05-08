@@ -77,10 +77,10 @@ Future<void> isolateFunction(SendPort sendPort) async {
       lastMacroStartTime ??= macroMicro[x].macroTime;
 
       //Correlator Calculations
-      if(postProcessingParams.gatingRange.inRange(macroMicro[x])) {
+      if(postProcessingParams.gatingRange.inRange(macroMicro[x].microTime)) {
         //If end of bin, add to correlator
         final int currentCorrelationIndex = (macroMicro[x].macroTime - lastMacroStartTime) ~/ correlationBinSizePs;
-        if(currentCorrelationIndex > correlationIndex) {
+        if(currentCorrelationIndex != correlationIndex) {
           correlator.addPoint(correlationBin);
 
           final int maxCorrelationIndex = postProcessingParams.integrationTimePs ~/ correlationBinSizePs;
@@ -89,9 +89,6 @@ Future<void> isolateFunction(SendPort sendPort) async {
           }
           correlationIndex = currentCorrelationIndex % maxCorrelationIndex;
           correlationBin = 0;
-        }
-        else if(currentCorrelationIndex < correlationIndex) {
-          throw StateError('Correlation index went backwards');
         }
 
         correlationBin++;
@@ -122,6 +119,7 @@ Future<void> isolateFunction(SendPort sendPort) async {
     await Future.delayed(const Duration(milliseconds: 100));
   }
 
+  print('Closing isolate');
   bindings.stopMeasurement(nativeMeasurement);
   bindings.freeMeasurement(nativeMeasurement);
   bindings.freeTagger(nativeDevice);
@@ -166,10 +164,13 @@ Stream<(Map<int, int>, Iterable<CorrelationPair>)> startMeasurement(MeasurementP
       _sendPort!.send(null);
       receivePort.close();
 
-      await completer.future.timeout(const Duration(seconds: 5), onTimeout: () {
-        _isolate?.kill();
-        _isolate = null;
-      });
+      await completer.future.timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          _isolate?.kill();
+        },
+      );
+      _isolate = null;
 
       responseSub.cancel();
     },
