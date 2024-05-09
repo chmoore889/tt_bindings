@@ -119,7 +119,6 @@ Future<void> isolateFunction(SendPort sendPort) async {
     await Future.delayed(const Duration(milliseconds: 100));
   }
 
-  print('Closing isolate');
   bindings.stopMeasurement(nativeMeasurement);
   bindings.freeMeasurement(nativeMeasurement);
   bindings.freeTagger(nativeDevice);

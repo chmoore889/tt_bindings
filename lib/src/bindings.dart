@@ -47,11 +47,8 @@ final DynamicLibrary dylib = DynamicLibrary.open(r'C:\Users\Christopher\source\r
 
 final GetTagger getTagger = dylib.lookupFunction<_GetTaggerFFI, GetTagger>('getTagger');
 
-final freeTaggerAddress = dylib.lookup<NativeFunction<_PointerControlFFI>>('freeTagger');
-final freeTagger = freeTaggerAddress.asFunction<PointerControl>();
-//final PointerControl freeTagger = dylib.lookupFunction<_PointerControlFFI, PointerControl>('freeTagger');
-final freeMeasurementAddress = dylib.lookup<NativeFunction<_PointerControlFFI>>('freeMeasurement');
-final freeMeasurement = freeTaggerAddress.asFunction<PointerControl>();
+final PointerControl freeTagger = dylib.lookupFunction<_PointerControlFFI, PointerControl>('freeTagger');
+final PointerControl freeMeasurement = dylib.lookupFunction<_PointerControlFFI, PointerControl>('freeMeasurement');
 
 final PointerControl startMeasurement = dylib.lookupFunction<_PointerControlFFI, PointerControl>('startMeasurement');
 final PointerControl stopMeasurement = dylib.lookupFunction<_PointerControlFFI, PointerControl>('stopMeasurement');

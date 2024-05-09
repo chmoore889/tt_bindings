@@ -20,7 +20,7 @@ Future<void> main() async {
     print('Got event');
   });
 
-  await Future.delayed(const Duration(seconds: 100));
+  await Future.delayed(const Duration(seconds: 5));
 
   await streamMeasureSub.cancel();
 
