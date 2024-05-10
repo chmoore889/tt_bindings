@@ -32,6 +32,10 @@ Future<void> isolateFunction(SendPort sendPort) async {
   sendPort.send(receivePort.sendPort);
 
   final Pointer<Void> nativeDevice = bindings.getTagger();
+  if(nativeDevice == nullptr) {
+    sendPort.send(StateError('Failed to get tagger'));
+    return;
+  }
   print('Got tagger, waiting for params');
 
   final Pointer<bindings.MeasurementParamsNative> nativeParams = malloc();
@@ -44,6 +48,10 @@ Future<void> isolateFunction(SendPort sendPort) async {
   final Pointer<Void> nativeMeasurement = bindings.newMeasurement(nativeDevice, nativeParams.ref, measurementParams.saveDirectory?.path.toNativeUtf8() ?? nullptr);
   malloc.free(nativeParamsDetArray);
   malloc.free(nativeParams);
+  if(nativeMeasurement == nullptr) {
+    sendPort.send(StateError('Failed to create measurement'));
+    return;
+  }
   print('Starting new measurement');
 
   //bindings.startMeasurement(nativeMeasurement);
@@ -67,7 +75,17 @@ Future<void> isolateFunction(SendPort sendPort) async {
     final Pointer<Size> lengthPointer = malloc();
     final int res = bindings.getData(nativeMeasurement, macroMicroPointer, lengthPointer);
     if(res != 0) {
-      throw StateError('Error getting data');
+      if(res == 1) {
+        print('Sending error');
+        sendPort.send(StateError('Out of memory'));
+      } else if (res == 2) {
+        print('Sending error');
+        sendPort.send(StateError('TimeTagger error - There was either a USB error or an overflow'));
+      } else {
+        print('Sending error');
+        sendPort.send(StateError('Unknown error code $res'));
+      }
+      return;
     }
     final macroMicro = macroMicroPointer.value;
     final length = lengthPointer.value;
@@ -173,6 +191,9 @@ Stream<(Map<int, int>, Iterable<CorrelationPair>)> startMeasurement(MeasurementP
         }
         else if (message is (Map<int, int>, Iterable<CorrelationPair>)) {
           output.add(message);
+        } else if (message is Error) {
+          print('Got error');
+          output.addError(message);
         }
       });
     },
