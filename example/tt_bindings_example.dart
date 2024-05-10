@@ -11,7 +11,7 @@ Future<void> main() async {
     ),
     PostProcessingParams(
       integrationTimeSeconds: 1,
-      gatingRange: const GatingRange(0, 12500),
+      gatingRange: const GatingRange(7500, 7800),
       activeChannel: 2,
     ),
   );
@@ -21,7 +21,7 @@ Future<void> main() async {
     print('Got event');
   });
 
-  await Future.delayed(const Duration(seconds: 5));
+  await Future.delayed(const Duration(seconds: 35));
 
   await streamMeasureSub.cancel();
 
