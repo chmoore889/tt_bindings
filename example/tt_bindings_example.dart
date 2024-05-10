@@ -12,6 +12,7 @@ Future<void> main() async {
     PostProcessingParams(
       integrationTimeSeconds: 1,
       gatingRange: const GatingRange(0, 12500),
+      activeChannel: 2,
     ),
   );
 

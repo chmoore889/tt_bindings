@@ -23,6 +23,7 @@ Future<void> isolateFunction(SendPort sendPort) async {
       completer.complete(message);
     } else if(message is PostProcessingParams) {
       postProcessingParams = message;
+      print('NewParams');
     } else if (message == null) {
       shouldClose = true;
       receivePort.close();
@@ -74,6 +75,10 @@ Future<void> isolateFunction(SendPort sendPort) async {
     malloc.free(lengthPointer);
 
     for (int x = 0; x < length; x++) {
+      if(postProcessingParams.activeChannel != macroMicro[x].channel.abs()) {
+        continue;
+      }
+
       lastMacroStartTime ??= macroMicro[x].macroTime;
 
       //Correlator Calculations
@@ -116,7 +121,7 @@ Future<void> isolateFunction(SendPort sendPort) async {
     }
     malloc.free(macroMicro);
 
-    await Future.delayed(const Duration(milliseconds: 100));
+    await Future.delayed(const Duration(milliseconds: 35));
   }
 
   bindings.stopMeasurement(nativeMeasurement);

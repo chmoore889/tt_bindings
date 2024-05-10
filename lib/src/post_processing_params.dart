@@ -1,10 +1,12 @@
 class PostProcessingParams {
   int integrationTimePs;
   GatingRange gatingRange;
+  int activeChannel;
 
   PostProcessingParams({
     required double integrationTimeSeconds,
     required this.gatingRange,
+    required this.activeChannel,
   }) : integrationTimePs = (integrationTimeSeconds * 1e12).round();
 }
 
