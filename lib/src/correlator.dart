@@ -105,6 +105,13 @@ class Correlator {
     }
   }
 
+  void addZeros(int count) {
+    if (count <= 0) return;
+    for (int x = 0; x < count; x++) {
+      addPoint(0);
+    }
+  }
+
   Iterable<CorrelationPair> genOutput() {
     //Put data into dataOut
     final List<double> dataOut = [

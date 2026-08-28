@@ -33,7 +33,7 @@ DynamicLibrary getLibrary() {
     dylib = DynamicLibrary.open(r'TimeDomain_Swabian.dll');
   } catch (e) {
     print('Using backup path for library');
-    dylib = DynamicLibrary.open(r'C:\Users\Christopher\source\repos\chmoore889\TimeDomainTTUltra\x64\Release\TimeDomain_Swabian.dll');
+    dylib = DynamicLibrary.open(r'C:\Users\sunar\source\repos\TimeDomainTTUltra\x64\Release\TimeDomain_Swabian.dll');
   }
   return dylib;
 }
@@ -51,8 +51,8 @@ typedef _NewMeasurementFFI = Pointer<Void> Function(Pointer<Void>, MeasurementPa
 typedef NewMeasurement = Pointer<Void> Function(Pointer<Void>, MeasurementParamsNative, Pointer<Utf8>);
 
 //getData
-typedef _GetDataFFI = Int Function(Pointer<Void>, Pointer<Pointer<MacroMicroNative>>, Pointer<Size>);
-typedef GetData = int Function(Pointer<Void>, Pointer<Pointer<MacroMicroNative>>, Pointer<Size>);
+typedef _GetDataFFI = Int Function(Pointer<Void>, Pointer<MacroMicroNative>, Size, Pointer<Size>, Int32);
+typedef GetData = int Function(Pointer<Void>, Pointer<MacroMicroNative>, int, Pointer<Size>, int);
 
 final DynamicLibrary dylib = getLibrary();
 
