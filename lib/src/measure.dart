@@ -146,7 +146,13 @@ Future<void> isolateFunction(SendPort sendPort) async {
           correlationBin++;
         }
 
-        final int binIndex = (microTime ~/ binSizePs) % maxTpsfBins;
+        // 1. Wrap the microTime to strictly [0, laserPeriod - 1]
+        // Dart's % is Euclidean, so negative numbers wrap positively automatically.
+        final int normalizedTime = microTime % measurementParams.laserPeriod;
+
+        // 2. Calculate the bin. 
+        // Because normalizedTime < laserPeriod, binIndex is guaranteed to be < maxTpsfBins.
+        final int binIndex = normalizedTime ~/ binSizePs;
 
         final int futureLastMacroStartTime =
             lastMacroStartTime + postProcessingParams.integrationTimePs;

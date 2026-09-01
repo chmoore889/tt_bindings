@@ -11,6 +11,8 @@ class MeasurementParams {
   final List<int> detectorChannels;
   final double detectorTriggerVoltage;
 
+  final int hardwareDelayPs;
+
   final Directory? saveDirectory;
 
   const MeasurementParams({
@@ -19,6 +21,7 @@ class MeasurementParams {
     required this.laserTriggerVoltage,
     required this.detectorChannels,
     required this.detectorTriggerVoltage,
+    this.hardwareDelayPs = 0,
     this.saveDirectory,
   });
 
@@ -32,5 +35,6 @@ class MeasurementParams {
     }
     native.detectorChannelsLength = detectorChannels.length;
     native.detectorTriggerVoltage = detectorTriggerVoltage;
+    native.hardwareDelayPs = hardwareDelayPs;
   }
 }

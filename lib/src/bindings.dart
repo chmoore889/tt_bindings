@@ -16,6 +16,9 @@ final class MeasurementParamsNative extends Struct {
   external int detectorChannelsLength;
   @Double()
   external double detectorTriggerVoltage;
+
+  @Int16()
+  external int hardwareDelayPs;
 }
 
 final class MacroMicroNative extends Struct {
